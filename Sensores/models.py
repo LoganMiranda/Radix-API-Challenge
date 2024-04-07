@@ -12,6 +12,18 @@ class Sensor(models.Model):
 
     def __str__(self):
         return self.nome
+    
+    @classmethod
+    def sensor_existe(cls, equipmentId):
+
+        return cls.objects.filter(id_sensor=equipmentId).exists()
+    
+
+
+    def criar_Leitura(self, timestamp, value):
+        Leitura.objects.create(sensor = self, timestamp = timestamp, valor = value)
+        return None
+
 
 
 class Leitura(models.Model):
@@ -24,3 +36,5 @@ class Leitura(models.Model):
     
     def __str__(self):
         return 'Leitura ' + str(self.timestamp)[:19] + ' - Sensor ' + self.sensor.nome
+    
+    
