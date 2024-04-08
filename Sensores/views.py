@@ -76,3 +76,12 @@ class Homepage(TemplateView):
     template_name = 'homepage.html'
     
     #model = Leitura
+
+class Homesensores(ListView):
+    template_name = 'sensores.html'
+    model = Sensor
+
+
+class LeituraSensor(DetailView):
+    template_name = 'detalhes_sensor.html'
+    model = Sensor
