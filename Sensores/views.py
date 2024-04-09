@@ -4,6 +4,10 @@ import csv, json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from dateutil import parser
+from django.utils import timezone
+from datetime import timedelta
+import matplotlib.pyplot as plt
+import io, base64
 # Create your views here.
 
 @csrf_exempt
@@ -85,3 +89,38 @@ class Homesensores(ListView):
 class LeituraSensor(DetailView):
     template_name = 'detalhes_sensor.html'
     model = Sensor
+
+    def constroi_grafico(self):
+        
+        sensor = self.get_object()
+        agora = timezone.now().astimezone(timezone.get_current_timezone())
+        limite_24_horas = agora - timedelta(hours=24)
+        leituras_ultimas_24h = sensor.leitura.filter(timestamp__gte=limite_24_horas)
+        
+        x, y = list(), list()
+        for leitura in leituras_ultimas_24h:
+            x.append(str(leitura.timestamp)[11:16])
+            y.append(leitura.valor)
+        
+        plt.plot(x, y)
+        plt.xlabel('Timestamp')
+        plt.ylabel('Valor')
+        plt.title('Gráfico de Leituras')
+        
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+
+        grafico = base64.b64encode(image_png).decode('utf-8')
+        
+        return grafico
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        grafico = self.constroi_grafico()
+        context['grafico'] = grafico
+    
+        return context
