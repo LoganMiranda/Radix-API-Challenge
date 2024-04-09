@@ -8,6 +8,8 @@ from django.utils import timezone
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import io, base64
+import random
+from time import sleep
 # Create your views here.
 
 @csrf_exempt
@@ -76,14 +78,12 @@ def dados_csv(request):
         return JsonResponse({"mensagem":mensagem})
 
 
-class Homepage(TemplateView):
-    template_name = 'homepage.html'
-    
-    #model = Leitura
 
 class Homesensores(ListView):
     template_name = 'sensores.html'
     model = Sensor
+
+    
 
 
 class LeituraSensor(DetailView):
@@ -117,10 +117,21 @@ class LeituraSensor(DetailView):
         
         return grafico
 
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        sensor = self.get_object()
+        '''for c in range(0,10):
+            try:
+                sleep(30)
+                agora = timezone.now().astimezone(timezone.get_current_timezone())
+                valor = round(random.uniform(0,100),2)
+                sensor.criar_Leitura(agora, valor )
+            except:
+                print('erro')
+'''
         grafico = self.constroi_grafico()
         context['grafico'] = grafico
     
         return context
+    

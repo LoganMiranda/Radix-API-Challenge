@@ -7,9 +7,19 @@
 
 {% block content %}
 
+<div class="py-8 px-28 flex justify-between" >
 
-<img src="data:image/png;base64,{{ grafico }}" alt="Meu Gráfico">
+<a href="button" class="btn btn-primary">24 horas</a>
+<button type="button" class="btn btn-primary">48 horas</button>
+<button type="button" class="btn btn-primary">1 semana</button>
+<button type="button" class="btn btn-primary">1 mês</button>
+</div>
 
+<div class="flex justify-center">
+    <h1 class="font-semibold text-4xl">Grafico 24 hrs</h1>
+
+    <img src="data:image/png;base64,{{ grafico }}" alt="Meu Gráfico" class="items-center py-32">
+</div>
 
 
 
