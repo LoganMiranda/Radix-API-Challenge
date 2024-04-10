@@ -141,3 +141,18 @@ class LeituraSensor(DetailView):
     
         return context
     
+
+class PesquisaSensor(ListView):
+    template_name = 'pesquisa_sensor.html'
+    model = Sensor
+
+    def get_queryset(self):
+        
+        #parametro 'query' porque no pesquisa_sensor.html o formulario foi criado  com esse parametro
+        termo_pesquisa = self.request.GET.get('query')
+        if termo_pesquisa != '':
+            object_list = self.model.objects.filter(id_sensor__contains = termo_pesquisa)
+            return object_list
+        
+        else:
+            return None

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-from .views import LeituraSensor, Homesensores
+from .views import LeituraSensor, Homesensores, PesquisaSensor
 
 app_name = 'Sensores'
 
@@ -10,4 +10,5 @@ urlpatterns = [
     #path('leitura/<str:id_sensor>', LeituraSensor.as_view(), name='leitura_sensor'),
     path('leitura/<int:pk>', LeituraSensor.as_view(), name='leitura_sensor'),
     path('', Homesensores.as_view(),name='sensores'),
+    path('pesquisa', PesquisaSensor.as_view(),name= 'pesquisa_sensor')
 ]

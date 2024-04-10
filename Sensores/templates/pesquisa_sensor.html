@@ -1,0 +1,37 @@
+{% extends 'base.html'%}
+
+{% block title %}
+    Pesquisa
+{% endblock %}
+
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<main>
+
+<section class='bg-primary_black flex justify-center py-32'>
+    <div class="py-32 w-10/12 relative text-center" >
+        <h2 class="text-gray-200 text-3xl font-medium">
+            Resultados da Pesquisa
+        </h2>
+        
+        {% if object_list|length < 1 %}
+        <h2 class="p-32 text-gray-200 text-2xl font-bold">
+            Não foram encontrados resultados para sua Pesquisa
+        </h2>
+        {% endif %}
+
+        <div class="py-12 flex flex-wrap items-center min-w-full movie_lis">
+            {% for sensor in object_list %}
+            <div class="m-4 bg-blue-500 overflow-hidden flex-shrink-0 rounded-md cursor-pointer h-14 w-32 py-2">
+                <a href="{% url 'Sensores:leitura_sensor' sensor.pk %}?horas=24"><button type="button" class="btn btn-primary">{{sensor.id_sensor}}</button></a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+</main>
+
+{% endblock %}

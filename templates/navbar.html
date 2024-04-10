@@ -1,0 +1,23 @@
+
+<nav class="w-full flex justify-between items-center py-3 px-4 fixed z-50">
+
+    <div class="w-6/12 font-semibold  md:text-2xl w-10/12 md:w-3/4 ">
+        <p>Sensores-Radix</p>
+
+    </div>
+
+    <div class="w-6/12 flex flex-nowrap justify-end">
+
+        <div class="mr-2">
+            <form method="get" action="{% url 'Sensores:pesquisa_sensor' %}">
+                <input class="py-1 px-2 rounded-md text-black" placeholder="Pesquisar.." type="text" name="query">
+                <!-- no input acima, tem uma classe q poderiamos adicionar, chamada 'value'. 
+                    se quisessemos que, na pagina da pesquisa, o nome pelo qual pesquisamos aparecesse, ao inves do campo de pesquisa ser limpado
+                    teriamos que adicionar no input acima: 'value = {{request.GET.query}}'-->
+                <input type="submit" value="">
+            </form>
+        </div>
+    
+    </div>
+
+</nav>
