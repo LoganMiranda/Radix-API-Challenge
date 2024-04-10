@@ -19,7 +19,7 @@
 <section id="section1" class="flex flex-nowrap items-center justify-center space-x-8">
     {% for sensor in object_list %}
       <div class="item h-64 w-3/4 m-4">
-          <a href="{% url 'Sensores:leitura_sensor' sensor.pk  %}">
+          <a href="{% url 'Sensores:leitura_sensor' sensor.pk  %}?horas=24">
             <p>{{sensor.id_sensor}}</p>
           </a>
       </div>

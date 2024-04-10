@@ -7,18 +7,19 @@
 
 {% block content %}
 
-<div class="py-8 px-28 flex justify-between" >
+<div class="py-10 px-28 flex justify-between" >
 
-<a href="button" class="btn btn-primary">24 horas</a>
-<button type="button" class="btn btn-primary">48 horas</button>
-<button type="button" class="btn btn-primary">1 semana</button>
-<button type="button" class="btn btn-primary">1 mês</button>
+<a href="{% url 'Sensores:leitura_sensor' sensor.pk %}?horas=24"><button type="button" class="btn btn-primary">24 horas</button></a>
+<a href="{% url 'Sensores:leitura_sensor' sensor.pk %}?horas=48"><button type="button" class="btn btn-primary">48 horas</button></a>
+<a href="{% url 'Sensores:leitura_sensor' sensor.pk %}?horas=168"><button type="button" class="btn btn-primary">1 semana</button></a>
+<a href="{% url 'Sensores:leitura_sensor' sensor.pk %}?horas=720"><button type="button" class="btn btn-primary">1 mês</button></a>
 </div>
 
-<div class="flex justify-center">
-    <h1 class="font-semibold text-4xl">Grafico 24 hrs</h1>
-
-    <img src="data:image/png;base64,{{ grafico }}" alt="Meu Gráfico" class="items-center py-32">
+<div>
+    <h1></h1>
+</div>
+<div class="py-28 text-center flex items-center flex-col">
+    <img src="data:image/png;base64,{{ grafico }}" alt="Meu Gráfico" width="450" height="150">
 </div>
 
 

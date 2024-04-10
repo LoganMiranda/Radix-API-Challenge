@@ -90,15 +90,15 @@ class LeituraSensor(DetailView):
     template_name = 'detalhes_sensor.html'
     model = Sensor
 
-    def constroi_grafico(self):
+    def constroi_grafico(self, tempo):
         
         sensor = self.get_object()
         agora = timezone.now().astimezone(timezone.get_current_timezone())
-        limite_24_horas = agora - timedelta(hours=24)
-        leituras_ultimas_24h = sensor.leitura.filter(timestamp__gte=limite_24_horas)
+        limite_tempo = agora - timedelta(hours=tempo)
+        leituras = sensor.leitura.filter(timestamp__gte=limite_tempo)
         
         x, y = list(), list()
-        for leitura in leituras_ultimas_24h:
+        for leitura in leituras:
             x.append(str(leitura.timestamp)[11:16])
             y.append(leitura.valor)
         
@@ -120,17 +120,23 @@ class LeituraSensor(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sensor = self.get_object()
-        '''for c in range(0,10):
+        #sensor = self.get_object()
+        
+        ''' !!!!!!!!TESTE!!!!!!!
+        for c in range(0,10):
             try:
                 sleep(30)
                 agora = timezone.now().astimezone(timezone.get_current_timezone())
                 valor = round(random.uniform(0,100),2)
                 sensor.criar_Leitura(agora, valor )
             except:
-                print('erro')
-'''
-        grafico = self.constroi_grafico()
+                print('erro')'''
+        
+        #obtemos o parametro de url que esta sendo passado            
+        tempo = int(self.request.GET.get('horas'))
+        #geramos o grafico em uma funçao propria para isso, criada acima 
+        grafico = self.constroi_grafico(tempo)
+        #adicionamos o grafico gerado ao dicionario context, para podermos utiliza-lo no nosso template
         context['grafico'] = grafico
     
         return context
