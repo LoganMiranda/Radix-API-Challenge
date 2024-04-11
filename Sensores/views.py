@@ -38,44 +38,81 @@ def dados_json(request):
     except:
         mensagem = 'Nao pode existir mais de uma mesma leitura para um mesmo sensor em um mesmo timestamp'
             
-    return JsonResponse({"mensagem":mensagem})
+    return JsonResponse({"erros":mensagem})
+
+
+
 
 
 @csrf_exempt
 def dados_csv(request):
 
-    if request.method == 'POST':
-        arquivo_csv = request.body.decode('utf-8').splitlines()
-        arquivo_csv = list(csv.reader(arquivo_csv))
-        
-        #acha posição do cabeçalho do arquivo_csv e soma 1, pois queremos os valores e nao o proprio cabeçalho
+    if request.method != 'POST':
+        return JsonResponse({"erros": 'API só recebe requisições do tipo POST'})
+    
+    erros = []
+    
+    try:
+        arquivo = request.body.decode('utf-8').splitlines()
+    except:
+        erros.append({"codigo": 400, "mensagem": 'arquivo veio criptografado. Nao é do tipo csv'})
+        return JsonResponse({"erros": erros})
+    
+    content_type = arquivo[2].split(':')
+    if content_type[1] != ' text/csv':
+        erros.append({"codigo": 400, "mensagem": "arquivo enviado não é do tipo csv"})
+        return JsonResponse({"erros": erros})
+    
+    arquivo_csv = list(csv.reader(arquivo))
+    
+    #acha posição do cabeçalho do arquivo_csv e soma 1, pois queremos os valores e nao o proprio cabeçalho
+    try:
         posicao_cabecalho = arquivo_csv.index(['equipmentId;timestamp;value']) + 1
+    
+    except:
+        erros.append({"codigo": 400, "mensagem": "header do csv, ou seja, os nomes das colunas estão errados ou na ordem incorreta"})
+        return JsonResponse({"erros": erros})
+    
+    for linha in arquivo_csv[posicao_cabecalho:]:
         
-        for linha in arquivo_csv[posicao_cabecalho:]:
+        #condiçao identificada que, apos o cabeçalho, a lista vazia representa o fim do arquivo
+        if linha == []:
+            break
             
-            #condiçao identificada que, apos o cabeçalho, a lista vazia representa o fim do arquivo
-            if linha == []:
-                break
+        else:
+            equipmentId, timestamp, value = linha[0].split(';')
+
+            if len(str(equipmentId)) > 8:
+                erros.append({"codigo": 400, "mensagem": f"{equipmentId} tem mais que 8 caracteres."})            
+            
+            try:
+                timestamp = parser.parse(timestamp)
+            except:
+                erros.append({"codigo": 400, "mensagem": f" '{timestamp}' nao esta no formato esperado(timestamp with timezone)."})
+            
+            try:
+                value = float(value)
+            except:
+                erros.append({"codigo": 400, "mensagem": f"value = '{value}' não é do tipo float."})
+
+            if Sensor.sensor_existe(equipmentId) == False:
+                name = 'testex'+ equipmentId
+                sensor = Sensor.objects.create(id_sensor = equipmentId, nome = name)
             
             else:
-                equipmentId, timestamp, value = linha[0].split(';')
-                
-                if Sensor.sensor_existe(equipmentId) == False:
-                    name = 'testex'+ equipmentId
-                    sensor = Sensor.objects.create(id_sensor = equipmentId, nome = name)
-                
-                else:
-                    sensor = Sensor.objects.get(id_sensor = equipmentId)
-                timestamp = parser.parse(timestamp)
-                
-                try:
-                    sensor.criar_Leitura(timestamp, value)
-                
-                except:
-                    print('Nao pode existir mais de uma mesma leitura para um mesmo sensor em um mesmo timestamp')
+                sensor = Sensor.objects.get(id_sensor = equipmentId)
+            
+            try:
+                sensor.criar_Leitura(timestamp, value)
+            
+            except:
+                erros.append({"codigo": 400, "mensagem": f"Ja existe uma leitura associada a:{equipmentId, timestamp}. Um mesmo sensor nao pode ter mais de uma leitura em um mesmo instante de tempo."})
+    
+    
+    mensagem = 'recebi o arquivo csv com sucesso'
+    return JsonResponse({"mensagem": mensagem, "erros": erros})
+        
 
-        mensagem = 'recebi o arquivo csv com sucesso'
-        return JsonResponse({"mensagem":mensagem})
 
 
 
