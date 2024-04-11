@@ -15,30 +15,57 @@ from time import sleep
 @csrf_exempt
 def dados_json(request):
 
-    if request.method == 'POST':
-        dados_sensor = json.loads(request.body)
+    if request.method != 'POST':
+        return JsonResponse({"erro": 'API só recebe requisições do tipo POST'})
+
+    dados_sensor = json.loads(request.body)
+    
+    try:
         equipmentId = dados_sensor["equipmentId"]
+    except:
+        return JsonResponse({"erro":" chave 'equipmentId' nao esta no Json. Deve ser exatamente 'equipmentId'."})
+    
+    if len(str(equipmentId)) > 8:
+        return JsonResponse({"erro":"equipmentId tem mais de 8 caracteres."})
+    
+    try:
+        timestamp = dados_sensor['timestamp']
+    except:
+        return JsonResponse({"erro": "chave 'timestamp' nao esta no Json. Deve ser exatamente 'timestamp'."})
+    
+    try:
+        timestamp_recebido = timestamp
+        timestamp = parser.parse(dados_sensor['timestamp'])
+    except:
+        return JsonResponse({"codigo": 400, "mensagem": f" '{timestamp_recebido}' nao esta no formato esperado(timestamp with timezone)."})
+    
+    try:
+        value = dados_sensor["value"]
+    except:
+        return JsonResponse({"erro":" chave 'value' nao esta no Json. Deve ser exatamente 'value'."})
 
-        #verifica se sensor ja existe no BD
-        if Sensor.sensor_existe(equipmentId) == True:
-                mensagem = "Sensor ja existe"
-        
-        else:
+    try:
+        value = float(value)
+    except:
+        return JsonResponse({"codigo": 400, "mensagem": f" '{value}' nao é do tipo float."})
 
-            #Construtor padrão do Django. Instancia novo objeto da classe Sensor e salva no BD.
-            name = 'testex'+ equipmentId 
-            sensor = Sensor.objects.create(id_sensor = equipmentId, nome = name )
-            mensagem = 'sensor nao existia, mas foi criado e inserido no BD com sucesso'
+
+
+    #verifica se sensor ja existe no BD
+    if Sensor.sensor_existe(equipmentId) == False:
+
+        #Construtor padrão do Django. Instancia novo objeto da classe Sensor e salva no BD.
+        name = 'testex'+ equipmentId 
+        sensor = Sensor.objects.create(id_sensor = equipmentId, nome = name )
             
     sensor = Sensor.objects.get(id_sensor = equipmentId)
-    timestamp = parser.parse(dados_sensor['timestamp'])
-            
+
     try:
-        sensor.criar_Leitura(timestamp, dados_sensor['value']) 
+        sensor.criar_Leitura(timestamp, value) 
     except:
-        mensagem = 'Nao pode existir mais de uma mesma leitura para um mesmo sensor em um mesmo timestamp'
+        return JsonResponse({"codigo": 400, "mensagem": f"Ja existe uma leitura associada a:{equipmentId, timestamp_recebido}. Um mesmo sensor nao pode ter mais de uma leitura em um mesmo instante de tempo."})
             
-    return JsonResponse({"erros":mensagem})
+    return JsonResponse({"codigo":201, "mensagem":"Json recebido com sucesso"})
 
 
 
@@ -86,9 +113,10 @@ def dados_csv(request):
                 erros.append({"codigo": 400, "mensagem": f"{equipmentId} tem mais que 8 caracteres."})            
             
             try:
+                timestamp_recebido = timestamp
                 timestamp = parser.parse(timestamp)
             except:
-                erros.append({"codigo": 400, "mensagem": f" '{timestamp}' nao esta no formato esperado(timestamp with timezone)."})
+                erros.append({"codigo": 400, "mensagem": f" '{timestamp_recebido}' nao esta no formato esperado(timestamp with timezone)."})
             
             try:
                 value = float(value)
@@ -106,7 +134,7 @@ def dados_csv(request):
                 sensor.criar_Leitura(timestamp, value)
             
             except:
-                erros.append({"codigo": 400, "mensagem": f"Ja existe uma leitura associada a:{equipmentId, timestamp}. Um mesmo sensor nao pode ter mais de uma leitura em um mesmo instante de tempo."})
+                erros.append({"codigo": 400, "mensagem": f"Ja existe uma leitura associada a:{equipmentId, timestamp_recebido}. Um mesmo sensor nao pode ter mais de uma leitura em um mesmo instante de tempo."})
     
     
     mensagem = 'recebi o arquivo csv com sucesso'
