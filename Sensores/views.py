@@ -1,15 +1,14 @@
-from django.views.generic import TemplateView, ListView, DetailView
-from .models import Sensor, Leitura
+from django.views.generic import ListView, DetailView
+from .models import Sensor
 import csv, json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from dateutil import parser
 from django.utils import timezone
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import io, base64
-import random
-from time import sleep
+from .validators import valida_json, valida_arquivo, valida_equipmentId, valida_timestamp, valida_value
+
 # Create your views here.
 
 @csrf_exempt
@@ -21,34 +20,23 @@ def dados_json(request):
     dados_sensor = json.loads(request.body)
     
     try:
-        equipmentId = dados_sensor["equipmentId"]
-    except:
-        return JsonResponse({"erro":" chave 'equipmentId' nao esta no Json. Deve ser exatamente 'equipmentId'."})
+        equipmentId, timestamp, value = valida_json(dados_sensor)
     
-    if len(str(equipmentId)) > 8:
-        return JsonResponse({"erro":"equipmentId tem mais de 8 caracteres."})
-    
-    try:
-        timestamp = dados_sensor['timestamp']
-    except:
-        return JsonResponse({"erro": "chave 'timestamp' nao esta no Json. Deve ser exatamente 'timestamp'."})
+    except Exception as erro:
+        msg = 'Json nao foi inserido. '
+        msg += str(erro)
+        return JsonResponse({"erros": erro})
     
     try:
+        valida_equipmentId(equipmentId)  
         timestamp_recebido = timestamp
-        timestamp = parser.parse(dados_sensor['timestamp'])
-    except:
-        return JsonResponse({"codigo": 400, "mensagem": f" '{timestamp_recebido}' nao esta no formato esperado(timestamp with timezone)."})
-    
-    try:
-        value = dados_sensor["value"]
-    except:
-        return JsonResponse({"erro":" chave 'value' nao esta no Json. Deve ser exatamente 'value'."})
-
-    try:
-        value = float(value)
-    except:
-        return JsonResponse({"codigo": 400, "mensagem": f" '{value}' nao é do tipo float."})
-
+        timestamp = valida_timestamp(timestamp_recebido)
+        value = valida_value(value)
+        
+    except Exception as erro:
+        msg = 'Json nao foi inserido. '
+        msg += str(erro)
+        return JsonResponse({"erros": msg})
 
 
     #verifica se sensor ja existe no BD
@@ -62,8 +50,9 @@ def dados_json(request):
 
     try:
         sensor.criar_Leitura(timestamp, value) 
+    
     except:
-        return JsonResponse({"codigo": 400, "mensagem": f"Ja existe uma leitura associada a:{equipmentId, timestamp_recebido}. Um mesmo sensor nao pode ter mais de uma leitura em um mesmo instante de tempo."})
+        return JsonResponse({"codigo": 400, "erro": f"Json NAO foi inserido. Ja existe uma leitura associada a:{equipmentId, timestamp_recebido}. Um mesmo sensor NAO pode ter mais de uma leitura em um mesmo instante de tempo."})
             
     return JsonResponse({"codigo":201, "mensagem":"Json recebido com sucesso"})
 
@@ -77,18 +66,16 @@ def dados_csv(request):
     if request.method != 'POST':
         return JsonResponse({"erros": 'API só recebe requisições do tipo POST'})
     
-    erros = []
+    erros = []  
     
     try:
-        arquivo = request.body.decode('utf-8').splitlines()
-    except:
-        erros.append({"codigo": 400, "mensagem": 'arquivo veio criptografado. Nao é do tipo csv'})
-        return JsonResponse({"erros": erros})
+        arquivo = valida_arquivo(request.body)
     
-    content_type = arquivo[2].split(':')
-    if content_type[1] != ' text/csv':
-        erros.append({"codigo": 400, "mensagem": "arquivo enviado não é do tipo csv"})
+    except Exception as erro:
+        erro = str(erro)
+        erros.append(erro)
         return JsonResponse({"erros": erros})
+
     
     arquivo_csv = list(csv.reader(arquivo))
     
@@ -106,42 +93,43 @@ def dados_csv(request):
         if linha == []:
             break
             
+        
+        equipmentId, timestamp, value = linha[0].split(';')
+        
+        try:
+            valida_equipmentId(equipmentId)  
+            timestamp_recebido = timestamp
+            timestamp = valida_timestamp(timestamp_recebido)
+            value = valida_value(value)
+        
+        except Exception as erro:
+            msg = f"A linha:{str(linha)} NAO foi inserida. "
+            msg += str(erro)
+            erros.append(msg)
+            continue
+
+        if Sensor.sensor_existe(equipmentId) == False:
+            name = 'testex'+ equipmentId
+            sensor = Sensor.objects.create(id_sensor = equipmentId, nome = name)
+        
         else:
-            equipmentId, timestamp, value = linha[0].split(';')
+            sensor = Sensor.objects.get(id_sensor = equipmentId)
+        
+        try:
+            sensor.criar_Leitura(timestamp, value)
+        
+        except:
+            erros.append({"codigo": 400, "mensagem": f"A linha:{str(linha)} NAO foi inserida. Pois ja existe uma leitura associada a:{equipmentId, timestamp_recebido}. Um mesmo sensor NAO pode ter mais de uma leitura em um mesmo instante de tempo."})
 
-            if len(str(equipmentId)) > 8:
-                erros.append({"codigo": 400, "mensagem": f"{equipmentId} tem mais que 8 caracteres."})            
-            
-            try:
-                timestamp_recebido = timestamp
-                timestamp = parser.parse(timestamp)
-            except:
-                erros.append({"codigo": 400, "mensagem": f" '{timestamp_recebido}' nao esta no formato esperado(timestamp with timezone)."})
-            
-            try:
-                value = float(value)
-            except:
-                erros.append({"codigo": 400, "mensagem": f"value = '{value}' não é do tipo float."})
-
-            if Sensor.sensor_existe(equipmentId) == False:
-                name = 'testex'+ equipmentId
-                sensor = Sensor.objects.create(id_sensor = equipmentId, nome = name)
-            
-            else:
-                sensor = Sensor.objects.get(id_sensor = equipmentId)
-            
-            try:
-                sensor.criar_Leitura(timestamp, value)
-            
-            except:
-                erros.append({"codigo": 400, "mensagem": f"Ja existe uma leitura associada a:{equipmentId, timestamp_recebido}. Um mesmo sensor nao pode ter mais de uma leitura em um mesmo instante de tempo."})
-    
     
     mensagem = 'recebi o arquivo csv com sucesso'
-    return JsonResponse({"mensagem": mensagem, "erros": erros})
+    
+    if len(erros) > 0:
+        return JsonResponse({"mensagem": mensagem, "erros": erros})
+    
+    else:
+        return JsonResponse({"mensagem": mensagem})
         
-
-
 
 
 class Homesensores(ListView):
