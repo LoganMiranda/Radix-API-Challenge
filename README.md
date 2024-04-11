@@ -40,4 +40,8 @@ O sistema valida o header e os valores de cada linha do CSV antes de inserir no 
 Página Web index, que mostra cada Sensor inserido no banco de dados. Cada Sensor possui um link dinâmico, que leva o usuário para uma outra página web com detalhes daquele Sensor. No canto superior direito da Home, temos um campo de pesquisa, onde o usuário pode pesquisar o Sensor específico, de acordo com o seu equipmentId.
 
 ### Pesquisa  ~/pesquisa?query={termo_busca} 
-Página de Pesquisa, que busca no banco de dados os Sensores existentes, verificando seu equipmentId, de acordo com o termo de busca inserido pelo usuário. A correspondência do termo de busca e o equipmentId é parcial, ou seja, retorna retorna os equipamentos correspondentes
+Página de Pesquisa, que busca no banco de dados os Sensores existentes, verificando seu equipmentId, de acordo com o termo de busca inserido pelo usuário. A correspondência do termo de busca e o equipmentId é parcial, ou seja, retorna retorna os equipamentos correspondentes de acordo com o termo de pesquisa.
+
+### detalhes_sensor ~/leitura/{id}?hora={hora}
+Página que mostra o gráfico de um Sensor específico, de acordo com o id artificial do Sensor e o parâmetro hora. A página vai mostrar um gráfico, de acordo com o período anterior, medido em horas, ao momento de acesso ao usuário na página, sendo as opções dispostas ao usuário, por meio de botões na tela, de 24 horas, que é a padrão, 48 horas, 1 semana e 1 mês. O gráfico escolhido foi o gráfico de linhas, em que as coordenadas são valor da leitura do sensor(y), por tempo(x), que é o horário do timestamp em que a leitura foi realizada.
+
