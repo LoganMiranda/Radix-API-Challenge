@@ -7,9 +7,10 @@ Foi criada uma API, com dois endpoints, e três páginas web.
 
 ## Requisitos 
 1. Instalar Django Framework: `pip install django`
-2. Realizar Instalação do Banco de dados: `python manage.py migrate`
-3. Instalar Matplotlib: `pip install matplotlib`
-4. Rodar o servidor: `python manage.py runserver`
+2. Realizar instalação do Banco de dados: `python manage.py migrate`
+3. Realizar instalação do Banco de dados> `python manage.py makemigrations`
+4. Instalar Matplotlib: `pip install matplotlib`
+5. Rodar o servidor: `python manage.py runserver`
 
 ## Rotas - API
 
