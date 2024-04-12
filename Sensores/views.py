@@ -99,7 +99,7 @@ def dados_csv(request):
         try:
             valida_equipmentId(equipmentId)  
             timestamp_recebido = timestamp
-            timestamp = valida_timestamp(timestamp_recebido)
+            timestamp = valida_timestamp(timestamp)
             value = valida_value(value)
         
         except Exception as erro:
@@ -128,8 +128,7 @@ def dados_csv(request):
         return JsonResponse({"mensagem": mensagem, "erros": erros})
     
     else:
-        return JsonResponse({"mensagem": mensagem})
-        
+        return JsonResponse({"codigo":201, "mensagem": mensagem})        
 
 
 class Homesensores(ListView):
@@ -173,22 +172,13 @@ class LeituraSensor(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #sensor = self.get_object()
-        
-        ''' !!!!!!!!TESTE!!!!!!!
-        for c in range(0,10):
-            try:
-                sleep(30)
-                agora = timezone.now().astimezone(timezone.get_current_timezone())
-                valor = round(random.uniform(0,100),2)
-                sensor.criar_Leitura(agora, valor )
-            except:
-                print('erro')'''
         
         #obtemos o parametro de url que esta sendo passado            
         tempo = int(self.request.GET.get('horas'))
+
         #geramos o grafico em uma funçao propria para isso, criada acima 
         grafico = self.constroi_grafico(tempo)
+
         #adicionamos o grafico gerado ao dicionario context, para podermos utiliza-lo no nosso template
         context['grafico'] = grafico
     
