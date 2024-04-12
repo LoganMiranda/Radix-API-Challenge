@@ -25,7 +25,7 @@ def dados_json(request):
     except Exception as erro:
         msg = 'Json nao foi inserido. '
         msg += str(erro)
-        return JsonResponse({"erros": erro})
+        return JsonResponse({"erros": msg})
     
     try:
         valida_equipmentId(equipmentId)  
@@ -34,8 +34,9 @@ def dados_json(request):
         value = valida_value(value)
         
     except Exception as erro:
-        msg = 'Json nao foi inserido. '
-        msg += str(erro)
+        msg = str("Json nao foi inserido.")
+        erro = str(erro)
+        msg += erro
         return JsonResponse({"erros": msg})
 
 
