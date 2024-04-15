@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from datetime import timedelta
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io, base64
 from .validators import valida_json, valida_arquivo, valida_equipmentId, valida_timestamp, valida_value
@@ -148,17 +150,18 @@ class LeituraSensor(DetailView):
         sensor = self.get_object()
         agora = timezone.now().astimezone(timezone.get_current_timezone())
         limite_tempo = agora - timedelta(hours=tempo)
-        leituras = sensor.leitura.filter(timestamp__gte=limite_tempo)
+        leituras = sensor.leitura.filter(timestamp__gte=limite_tempo).order_by("timestamp")
         
+        fig, ax = plt.subplots()
         x, y = list(), list()
         for leitura in leituras:
-            x.append(str(leitura.timestamp)[11:16])
-            y.append(leitura.valor)
+           x.append(str(leitura.timestamp)[11:16])
+           y.append(leitura.valor)
         
-        plt.plot(x, y)
-        plt.xlabel('Timestamp')
-        plt.ylabel('Valor')
-        plt.title('Gráfico de Leituras')
+        ax.plot(x, y)
+        ax.set_xlabel('Timestamp')
+        ax.set_ylabel('Valor')
+        ax.set_title('Gráfico de Leituras')
         
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png')
