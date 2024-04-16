@@ -155,14 +155,15 @@ class LeituraSensor(DetailView):
         fig, ax = plt.subplots()
         x, y = list(), list()
         for leitura in leituras:
-           x.append(str(leitura.timestamp)[11:16])
+           x.append(str(leitura.timestamp)[:16])
            y.append(leitura.valor)
         
         ax.plot(x, y)
         ax.set_xlabel('Timestamp')
         ax.set_ylabel('Valor')
         ax.set_title('Gráfico de Leituras')
-        
+        plt.xticks(rotation=90)
+
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png')
         buffer.seek(0)
